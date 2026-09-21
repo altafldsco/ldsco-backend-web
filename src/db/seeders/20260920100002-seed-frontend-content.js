@@ -992,9 +992,13 @@ module.exports = {
         subheading: null,
         body: null,
         image_media_id: null,
+        // video_media_id is intentionally left null here — an admin sets the
+        // actual hero video through the Video picker on this content block,
+        // which uploads into the media library rather than a raw JSON path.
+        video_media_id: null,
         link_label: 'Learn more',
         link_href: '/about',
-        extra: JSON.stringify({ videoUrl: '/video_office.mp4' }),
+        extra: null,
         sort_order: 0,
         is_published: true,
         created_at: now,

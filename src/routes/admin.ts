@@ -124,7 +124,7 @@ router.use(
   buildAdminCrudRouter(ContentBlock, {
     resource: 'content_blocks',
     filterableFields: ['pageKey', 'sectionKey', 'isPublished'],
-    include: [{ association: 'image' }],
+    include: [{ association: 'image' }, { association: 'video' }],
   })
 );
 

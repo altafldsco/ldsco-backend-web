@@ -16,8 +16,11 @@ ContentBlock.init(
     subheading: { type: DataTypes.STRING(500), allowNull: true },
     body: { type: DataTypes.TEXT, allowNull: true },
     imageMediaId: { type: DataTypes.INTEGER.UNSIGNED, allowNull: true },
+    videoMediaId: { type: DataTypes.INTEGER.UNSIGNED, allowNull: true },
     linkLabel: { type: DataTypes.STRING(190), allowNull: true },
     linkHref: { type: DataTypes.STRING(1000), allowNull: true },
+    secondaryLinkLabel: { type: DataTypes.STRING(190), allowNull: true },
+    secondaryLinkHref: { type: DataTypes.STRING(1000), allowNull: true },
     extra: { type: DataTypes.JSON, allowNull: true },
     sortOrder: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
     isPublished: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true },
@@ -32,3 +35,4 @@ ContentBlock.init(
 applyAuditHooks(ContentBlock);
 
 ContentBlock.belongsTo(MediaFile, { foreignKey: 'imageMediaId', as: 'image' });
+ContentBlock.belongsTo(MediaFile, { foreignKey: 'videoMediaId', as: 'video' });

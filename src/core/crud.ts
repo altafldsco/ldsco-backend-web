@@ -38,11 +38,20 @@ function buildQueryOptions(model: ModelStatic<Model>, req: Request, opts: CrudOp
   const page = Math.max(1, parseInt(String(req.query.page ?? '1'), 10) || 1);
   const pageSize = Math.min(100, Math.max(1, parseInt(String(req.query.pageSize ?? '50'), 10) || 50));
 
+  const defaultOrder = opts.defaultOrder ?? ([['sortOrder', 'ASC'], ['id', 'ASC']] as Order);
+  const sortBy = String(req.query.sortBy ?? '');
+  const sortDir = String(req.query.sortDir ?? 'asc').toUpperCase() === 'DESC' ? 'DESC' : 'ASC';
+  // Only allow sorting by a real column on this model — sortBy is client-controlled,
+  // and an unknown identifier would otherwise surface as a raw DB error.
+  const order: Order = sortBy && Object.keys(model.getAttributes()).includes(sortBy)
+    ? [[sortBy, sortDir]]
+    : defaultOrder;
+
   return {
     where,
     limit: pageSize,
     offset: (page - 1) * pageSize,
-    order: opts.defaultOrder ?? ([['sortOrder', 'ASC'], ['id', 'ASC']] as Order),
+    order,
     include: opts.include,
     page,
     pageSize,
