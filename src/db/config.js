@@ -1,4 +1,4 @@
-require('dotenv').config();
+require('dotenv').config({ override: true });
 
 const base = {
   username: process.env.DB_USER || 'root',

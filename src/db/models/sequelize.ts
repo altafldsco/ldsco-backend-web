@@ -1,5 +1,6 @@
 import { Sequelize } from 'sequelize';
-import 'dotenv/config';
+import dotenv from 'dotenv';
+dotenv.config({ override: true });
 
 export const sequelize = new Sequelize(
   process.env.DB_NAME || 'ldsco_web',
