@@ -2,10 +2,24 @@ import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
 import multer from 'multer';
+import { HttpError } from './errorHandler';
 
-export const UPLOAD_ROOT = path.resolve(process.cwd(), 'uploads');
-if (!fs.existsSync(UPLOAD_ROOT)) {
-  fs.mkdirSync(UPLOAD_ROOT, { recursive: true });
+// Uploads live outside the app/project directory so they survive redeploys.
+// Prod: the container's /app/uploads is bind-mounted from the host's
+// /var/www/uploads, which nginx serves directly at /uploads/<filename>.
+// Local dev: set UPLOAD_DIR in .env (e.g. ./uploads) to keep files nearby.
+export const UPLOAD_ROOT = path.resolve(process.env.UPLOAD_DIR || '/app/uploads');
+fs.mkdirSync(UPLOAD_ROOT, { recursive: true });
+
+// Maps a stored "/uploads/<filename>" url back to its file on disk. Only the
+// basename is used, so a crafted url can never point outside UPLOAD_ROOT, and
+// records keep resolving correctly if UPLOAD_DIR changes between deploys.
+export function uploadPathFromUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  const pathname = url.startsWith('http://') || url.startsWith('https://') ? new URL(url).pathname : url;
+  if (!pathname.startsWith('/uploads/')) return null;
+  const fileName = path.basename(pathname);
+  return fileName ? path.join(UPLOAD_ROOT, fileName) : null;
 }
 
 export function fileTypeFromMime(mimeType: string): 'image' | 'video' | 'pdf' | 'doc' | 'other' {
@@ -19,7 +33,7 @@ export function fileTypeFromMime(mimeType: string): 'image' | 'video' | 'pdf' | 
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => cb(null, UPLOAD_ROOT),
   filename: (_req, file, cb) => {
-    const ext = path.extname(file.originalname);
+    const ext = path.extname(file.originalname).toLowerCase();
     const unique = crypto.randomBytes(16).toString('hex');
     cb(null, `${Date.now()}-${unique}${ext}`);
   },
@@ -46,7 +60,7 @@ export const upload = multer({
   limits: { fileSize: 200 * 1024 * 1024 }, // 200MB ceiling (video); route-level checks can be stricter
   fileFilter: (_req, file, cb) => {
     if (!ALLOWED_MIME.has(file.mimetype)) {
-      return cb(new Error(`Unsupported file type: ${file.mimetype}`));
+      return cb(new HttpError(400, `Unsupported file type: ${file.mimetype}`));
     }
     cb(null, true);
   },
