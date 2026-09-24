@@ -24,7 +24,11 @@ RUN npm ci --omit=dev && npm cache clean --force
 COPY --from=build /app/dist ./dist
 COPY .sequelizerc ./
 
-# Folder for user uploads, writable by the non-root user
+# Uploads are saved to UPLOAD_DIR. In prod this path is bind-mounted from the
+# host's /var/www/uploads (see docker-compose.prod.yml), so files live outside
+# the image and survive redeploys. The host dir's ownership wins over this
+# chown, so it must be writable by the compose `user:` (1001:1001).
+ENV UPLOAD_DIR=/app/uploads
 RUN mkdir -p /app/uploads && chown -R node:node /app/uploads
 
 USER node

@@ -1,4 +1,5 @@
 import { NextFunction, Request, Response } from 'express';
+import { MulterError } from 'multer';
 import { ValidationError as SequelizeValidationError, UniqueConstraintError } from 'sequelize';
 
 export class HttpError extends Error {
@@ -19,6 +20,10 @@ export function notFoundHandler(req: Request, res: Response) {
 export function errorHandler(err: any, req: Request, res: Response, next: NextFunction) {
   if (err instanceof HttpError) {
     return res.status(err.status).json({ error: err.message, details: err.details });
+  }
+  if (err instanceof MulterError) {
+    const message = err.code === 'LIMIT_FILE_SIZE' ? 'File is too large' : err.message;
+    return res.status(400).json({ error: message });
   }
   if (err instanceof UniqueConstraintError) {
     return res.status(409).json({ error: 'Already exists', details: err.errors?.map((e) => e.message) });
