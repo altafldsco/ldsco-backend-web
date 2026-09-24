@@ -11,6 +11,11 @@ import { UPLOAD_ROOT } from './middleware/upload';
 export function createApp() {
   const app = express();
 
+  // Behind exactly one proxy hop (nginx, or the frontend's /api/contact route,
+  // which forwards nginx's X-Forwarded-For), so req.ip is the real client IP
+  // for rate limiting and Turnstile.
+  app.set('trust proxy', 1);
+
   app.use(helmet({ crossOriginResourcePolicy: false }));
   app.use(
     cors({
