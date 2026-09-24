@@ -4,6 +4,7 @@ import { body, validationResult } from 'express-validator';
 import { User, Role, Permission } from '../../db/models';
 import { HttpError } from '../../middleware/errorHandler';
 import { authenticate } from '../../middleware/authenticate';
+import { verifyTurnstileToken } from '../../core/turnstile';
 
 const router = Router();
 
@@ -33,12 +34,17 @@ router.post(
   '/login',
   body('email').isEmail(),
   body('password').isString().notEmpty(),
+  body('turnstileToken').isString().notEmpty(),
   async (req, res, next) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) throw new HttpError(400, 'Invalid credentials payload', errors.array());
 
-      const { email, password } = req.body;
+      const { email, password, turnstileToken } = req.body;
+
+      const captchaOk = await verifyTurnstileToken(turnstileToken, process.env.TURNSTILE_SECRET_KEY, req.ip);
+      if (!captchaOk) throw new HttpError(400, 'CAPTCHA verification failed. Please try again.');
+
       const user = await User.findOne({
         where: { email },
         include: [{ model: Role, as: 'role', include: [{ model: Permission, as: 'permissions' }] }],
