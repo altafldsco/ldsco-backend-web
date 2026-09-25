@@ -1,9 +1,11 @@
 import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
 import { body, validationResult } from 'express-validator';
-import { ContactSubmission } from '../../db/models';
+import { ContactSubmission, SiteSetting } from '../../db/models';
 import { HttpError } from '../../middleware/errorHandler';
 import { verifyTurnstileToken } from '../../core/turnstile';
+import { sendMail } from '../../core/mailer';
+import { buildContactEmail } from './notificationEmail';
 
 const router = Router();
 
@@ -35,10 +37,41 @@ router.post(
 
       const submission = await ContactSubmission.create({ name, company, email, phone, message });
       res.status(201).json({ data: { id: submission.id } });
+
+      // Notify the site's contact inbox. Runs after the response so SMTP
+      // latency or failure never affects the visitor — the submission is
+      // already saved and visible in the admin panel either way.
+      void notifyContactInbox(submission);
     } catch (err) {
       next(err);
     }
   }
 );
+
+async function notifyContactInbox(submission: ContactSubmission): Promise<void> {
+  try {
+    const settings = await SiteSetting.findOne({ order: [['id', 'ASC']] });
+    const to = settings?.email;
+    if (!to) {
+      console.warn(`[contact] site_settings.email is empty — skipping notification for submission #${submission.id}`);
+      return;
+    }
+
+    const { subject, html, text } = buildContactEmail({
+      id: submission.id,
+      name: submission.name,
+      company: submission.company,
+      email: submission.email,
+      phone: submission.phone,
+      message: submission.message,
+      submittedAt: submission.createdAt ?? new Date(),
+      companyName: settings.companyName,
+    });
+
+    await sendMail({ to, replyTo: { name: submission.name, address: submission.email }, subject, html, text });
+  } catch (err) {
+    console.error(`[contact] failed to send notification for submission #${submission.id}`, err);
+  }
+}
 
 export default router;
