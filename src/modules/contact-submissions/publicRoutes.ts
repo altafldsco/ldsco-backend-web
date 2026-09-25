@@ -1,10 +1,10 @@
 import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
 import { body, validationResult } from 'express-validator';
+import { sendMail } from '../../core/mailer';
+import { verifyTurnstileToken } from '../../core/turnstile';
 import { ContactSubmission, SiteSetting } from '../../db/models';
 import { HttpError } from '../../middleware/errorHandler';
-import { verifyTurnstileToken } from '../../core/turnstile';
-import { sendMail } from '../../core/mailer';
 import { buildContactEmail } from './notificationEmail';
 
 const router = Router();
@@ -65,7 +65,7 @@ async function notifyContactInbox(submission: ContactSubmission): Promise<void> 
       phone: submission.phone,
       message: submission.message,
       submittedAt: submission.createdAt ?? new Date(),
-      companyName: settings.companyName,
+      companyName: settings.legalName,
     });
 
     await sendMail({ to, replyTo: { name: submission.name, address: submission.email }, subject, html, text });
