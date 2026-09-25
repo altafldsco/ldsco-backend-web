@@ -4,7 +4,7 @@ import { MediaFile } from '../../db/models';
 import { authenticate } from '../../middleware/authenticate';
 import { authorize } from '../../middleware/authorize';
 import { HttpError } from '../../middleware/errorHandler';
-import { upload, fileTypeFromMime } from '../../middleware/upload';
+import { upload, fileTypeFromMime, uploadPathFromUrl } from '../../middleware/upload';
 
 const router = Router();
 router.use(authenticate);
@@ -68,7 +68,9 @@ router.delete('/:id', authorize('media', 'delete'), async (req, res, next) => {
   try {
     const media = await MediaFile.findByPk(String(req.params.id));
     if (!media) throw new HttpError(404, 'Media not found');
-    const filePath = media.filePath;
+    // Resolve from the stored relative url rather than filePath, which is the
+    // absolute path at upload time and goes stale if UPLOAD_DIR is moved.
+    const filePath = uploadPathFromUrl(media.getDataValue('url'));
     await media.destroy();
     if (filePath) {
       fs.unlink(filePath, () => {
