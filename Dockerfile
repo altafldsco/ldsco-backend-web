@@ -18,7 +18,8 @@ ENV NODE_ENV=production
 
 # Production dependencies only
 COPY package.json package-lock.json ./
-RUN npm ci --omit=dev && npm cache clean --force
+COPY --from=deps /app/node_modules ./node_modules
+RUN npm prune --omit=dev && npm cache clean --force
 
 # Compiled app + Sequelize CLI config (for running migrations in the container)
 COPY --from=build /app/dist ./dist
