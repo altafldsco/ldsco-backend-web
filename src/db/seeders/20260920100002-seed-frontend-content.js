@@ -622,7 +622,7 @@ const PORTALS = [
 
 const SOCIAL_LINKS = [
   { platform: 'facebook', href: 'https://www.facebook.com/LorenDStark/timeline' },
-  { platform: 'twitter', href: 'https://twitter.com/ERISA_LDSCO' },
+  { platform: 'twitter', href: 'https://x.com/ERISA_LDSCO' },
   { platform: 'linkedin', href: 'https://www.linkedin.com/company/loren-d--stark-company-inc-' },
 ];
 
@@ -997,7 +997,7 @@ module.exports = {
         // which uploads into the media library rather than a raw JSON path.
         video_media_id: null,
         link_label: 'Learn more',
-        link_href: '/about',
+        link_href: '/learn-more',
         extra: null,
         sort_order: 0,
         is_published: true,
