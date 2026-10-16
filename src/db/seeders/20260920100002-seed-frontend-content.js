@@ -622,7 +622,7 @@ const PORTALS = [
 
 const SOCIAL_LINKS = [
   { platform: 'facebook', href: 'https://www.facebook.com/LorenDStark/timeline' },
-  { platform: 'twitter', href: 'https://twitter.com/ERISA_LDSCO' },
+  { platform: 'twitter', href: 'https://x.com/ERISA_LDSCO' },
   { platform: 'linkedin', href: 'https://www.linkedin.com/company/loren-d--stark-company-inc-' },
 ];
 

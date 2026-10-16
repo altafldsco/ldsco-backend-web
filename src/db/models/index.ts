@@ -18,6 +18,7 @@ import {
 } from './content.models';
 import { ContentBlock } from './contentBlock.model';
 import { ContactSubmission } from './contactSubmission.model';
+import { LoginOtp } from './loginOtp.model';
 
 export {
   sequelize,
@@ -45,4 +46,5 @@ export {
   InternationalOffice,
   ContentBlock,
   ContactSubmission,
+  LoginOtp,
 };
